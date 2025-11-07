@@ -1,0 +1,40 @@
+import { InputType, Field } from '@nestjs/graphql';
+import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
+import { UserRole } from '@prisma/client';
+
+@InputType()
+export class RegisterInput {
+  @Field()
+  @IsEmail()
+  email: string;
+
+  @Field()
+  @IsString()
+  @MinLength(3)
+  username: string;
+
+  @Field()
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @Field({ nullable: true })
+  @IsString()
+  @IsOptional()
+  firstName?: string;
+
+  @Field({ nullable: true })
+  @IsString()
+  @IsOptional()
+  lastName?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsEnum(UserRole)
+  @IsOptional()
+  role?: UserRole;
+
+  @Field({ nullable: true })
+  @IsString()
+  @IsOptional()
+  referralCode?: string;
+}
