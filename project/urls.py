@@ -19,12 +19,20 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import url
 from django.views.static import serve
+from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
 urlpatterns = [
     url(r'^media/(?P<path>.*)$', serve,{'document_root': settings.MEDIA_ROOT}),
-
     url(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
+
+    # GraphQL API Endpoint
+    path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
+
+    # Django Admin
     path('admin/', admin.site.urls),
     path('captcha/', include('captcha.urls')),
+
+    # Original Django URLs
     path('', include('home.urls', namespace='home')),
     path('', include('products.urls', namespace='products')),
     path('', include('accounts.urls', namespace='accounts')),
