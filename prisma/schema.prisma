@@ -1,0 +1,744 @@
+// Prisma Schema for NestJS GraphQL eCommerce Platform
+// This schema is based on the Django models from the original application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+  VENDOR
+}
+
+enum AccountStatus {
+  CUSTOMER
+  VENDOR
+}
+
+enum OrderStatus {
+  PENDING
+  UNDERWAY
+  COMPLETE
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  PROGRESSING
+  REFUNDED
+}
+
+enum PaymentMethodType {
+  BANK
+  PAYPAL
+  STRIPE
+  RAZORPAY
+}
+
+enum ProductPromotional {
+  NEW
+  HOT
+}
+
+enum AdPosition {
+  LEFT
+  RIGHT
+}
+
+// ============================================
+// USER & PROFILE MODELS
+// ============================================
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  username          String    @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  role              UserRole  @default(CUSTOMER)
+  isActive          Boolean   @default(true)
+  isStaff           Boolean   @default(false)
+  isSuperuser       Boolean   @default(false)
+  dateJoined        DateTime  @default(now())
+  lastLogin         DateTime?
+
+  // Relations
+  profile           Profile?
+  orders            Order[]   @relation("UserOrders")
+  supplierOrders    OrderSupplier[] @relation("SupplierOrders")
+  orderDetails      OrderDetails[] @relation("SupplierOrderDetails")
+  vendorPayments    VendorPayment[]
+
+  @@map("users")
+}
+
+model Profile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  displayName     String?
+  bio             String?
+  image           String?
+  mobileNumber    String?
+  address         String?
+  city            String?
+  postCode        String?
+  country         String?
+  state           String?
+  isVerified      Boolean   @default(false)
+  status          AccountStatus @default(CUSTOMER)
+  admission       Boolean   @default(false)
+  referralCode    String?
+  recommendedById String?
+  referrals       Int       @default(0)
+  balance         Float     @default(0.00)
+  requested       Float     @default(0.00)
+  slug            String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendedBy   Profile?  @relation("Referrals", fields: [recommendedById], references: [id])
+  referredUsers   Profile[] @relation("Referrals")
+  bankAccount     BankAccount?
+  socialLinks     SocialLink?
+  products        Product[]
+  posts           Post[]
+  comments        Comment[]
+  ratings         ProductRating[] @relation("CustomerRatings")
+  vendorRatings   ProductRating[] @relation("VendorRatings")
+  orderSuppliers  OrderSupplier[]
+  dealTimeAds     HomeAdDealTime[]
+  shopAds         ShopAdSidebar[]
+
+  @@map("profiles")
+}
+
+model BankAccount {
+  id              String    @id @default(uuid())
+  profileId       String    @unique
+  bankName        String?
+  accountNumber   String?
+  swiftCode       String?
+  accountName     String?
+  country         String?
+  paypalEmail     String?
+  description     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("bank_accounts")
+}
+
+model SocialLink {
+  id              String    @id @default(uuid())
+  profileId       String    @unique
+  facebook        String?
+  twitter         String?
+  instagram       String?
+  pinterest       String?
+
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("social_links")
+}
+
+// ============================================
+// CATEGORY MODELS (4-LEVEL HIERARCHY)
+// ============================================
+
+model SuperCategory {
+  id              String    @id @default(uuid())
+  name            String
+  image           String?
+  slug            String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  mainCategories  MainCategory[]
+  products        Product[]
+  posts           Post[]
+
+  @@map("super_categories")
+}
+
+model MainCategory {
+  id              String    @id @default(uuid())
+  superCategoryId String?
+  name            String
+  image           String?
+  slug            String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  superCategory   SuperCategory? @relation(fields: [superCategoryId], references: [id], onDelete: SetNull)
+  subCategories   SubCategory[]
+  products        Product[]
+
+  @@map("main_categories")
+}
+
+model SubCategory {
+  id              String    @id @default(uuid())
+  mainCategoryId  String?
+  name            String
+  image           String?
+  slug            String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  mainCategory    MainCategory? @relation(fields: [mainCategoryId], references: [id], onDelete: SetNull)
+  miniCategories  MiniCategory[]
+  products        Product[]
+
+  @@map("sub_categories")
+}
+
+model MiniCategory {
+  id              String    @id @default(uuid())
+  subCategoryId   String?
+  name            String
+  image           String?
+  slug            String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  subCategory     SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  products        Product[]
+
+  @@map("mini_categories")
+}
+
+// ============================================
+// PRODUCT MODELS
+// ============================================
+
+model Product {
+  id                  String    @id @default(uuid())
+  vendorId            String
+  name                String
+  description         String
+  content             String?   // Rich text content
+  digitalFile         String?
+  mainImage           String    @default("products/product.jpg")
+  additionalImage1    String?
+  additionalImage2    String?
+  additionalImage3    String?
+  additionalImage4    String?
+
+  // Categories
+  superCategoryId     String?
+  mainCategoryId      String?
+  subCategoryId       String?
+  miniCategoryId      String?
+
+  // Pricing
+  price               Float
+  discountPrice       Float     @default(0)
+
+  // Inventory
+  sku                 String?
+  stock               Int       @default(0)
+  pieces              Int       @default(0)
+  weight              Decimal   @default(0) @db.Decimal(10, 3)
+  width               Float?
+  height              Float?
+
+  // Ratings
+  averageRating       Int       @default(0)
+  totalRatings        Int       @default(0)
+
+  // Status
+  isSale              Boolean   @default(false)
+  promotional         ProductPromotional? @default(NEW)
+  isActive            Boolean   @default(true)
+  isDeleted           Boolean   @default(false)
+
+  tags                String?
+  slug                String    @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  vendor              Profile   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  superCategory       SuperCategory? @relation(fields: [superCategoryId], references: [id], onDelete: SetNull)
+  mainCategory        MainCategory? @relation(fields: [mainCategoryId], references: [id], onDelete: SetNull)
+  subCategory         SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  miniCategory        MiniCategory? @relation(fields: [miniCategoryId], references: [id], onDelete: SetNull)
+
+  images              ProductImage[]
+  sizes               ProductSize[]
+  ratings             ProductRating[]
+  orderDetails        OrderDetails[]
+  orderDetailsSupplier OrderDetailsSupplier[]
+
+  @@map("products")
+  @@index([vendorId])
+  @@index([slug])
+}
+
+model ProductImage {
+  id          String    @id @default(uuid())
+  productId   String
+  image       String
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductSize {
+  id          String    @id @default(uuid())
+  productId   String
+  size        String    // XXS, XS, S, M, L, XL, XXL
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_sizes")
+}
+
+model ProductRating {
+  id          String    @id @default(uuid())
+  productId   String
+  vendorId    String
+  customerId  String
+  rating      Int       // 1-5
+  comment     String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vendor      Profile   @relation("VendorRatings", fields: [vendorId], references: [id], onDelete: Cascade)
+  customer    Profile   @relation("CustomerRatings", fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("product_ratings")
+  @@index([productId])
+}
+
+// ============================================
+// ORDER MODELS
+// ============================================
+
+model Order {
+  id                String    @id @default(uuid())
+  userId            String?
+  email             String
+  couponId          String?
+  subTotal          String?
+  discount          String?
+  shipping          String?
+  amount            String
+  trackingNo        String?
+  receiptCache      String?
+  weight            Decimal   @default(0) @db.Decimal(10, 3)
+  isFinished        Boolean   @default(false)
+  status            OrderStatus @default(PENDING)
+  merchantOrderId   String?
+  orderIdPaymob     String?
+  authTokenOrder    String?
+  transactionId     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user              User?     @relation("UserOrders", fields: [userId], references: [id], onDelete: SetNull)
+  coupon            Coupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  orderDetails      OrderDetails[]
+  orderSuppliers    OrderSupplier[]
+  orderDetailsSupplier OrderDetailsSupplier[]
+  payment           Payment?
+
+  @@map("orders")
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderDetails {
+  id          String    @id @default(uuid())
+  orderId     String
+  productId   String
+  supplierId  String?
+  price       Decimal   @db.Decimal(10, 2)
+  quantity    Int
+  size        String?
+  weight      Decimal   @default(0) @db.Decimal(10, 3)
+
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier    User?     @relation("SupplierOrderDetails", fields: [supplierId], references: [id], onDelete: SetNull)
+  orderDetailsSupplier OrderDetailsSupplier[]
+
+  @@map("order_details")
+}
+
+model OrderSupplier {
+  id          String    @id @default(uuid())
+  userId      String?
+  vendorId    String
+  orderId     String
+  email       String
+  couponId    String?
+  subTotal    String?
+  discount    String?
+  shipping    String?
+  amount      String
+  weight      Decimal   @default(0) @db.Decimal(10, 3)
+  isFinished  Boolean   @default(false)
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User?     @relation("SupplierOrders", fields: [userId], references: [id], onDelete: SetNull)
+  vendor      Profile   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coupon      Coupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  orderDetailsSupplier OrderDetailsSupplier[]
+
+  @@map("order_suppliers")
+}
+
+model OrderDetailsSupplier {
+  id                String    @id @default(uuid())
+  orderSupplierId   String
+  orderDetailsId    String
+  orderId           String
+  productId         String?
+  supplierId        String?
+  price             Decimal   @db.Decimal(10, 2)
+  quantity          Int
+  size              String?
+  weight            Decimal   @default(0) @db.Decimal(10, 3)
+
+  orderSupplier     OrderSupplier @relation(fields: [orderSupplierId], references: [id], onDelete: Cascade)
+  orderDetails      OrderDetails @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product           Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_details_suppliers")
+}
+
+model Coupon {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  validFrom   DateTime
+  validTo     DateTime
+  discount    Int       // Percentage 0-100
+  isActive    Boolean   @default(true)
+
+  orders      Order[]
+  orderSuppliers OrderSupplier[]
+
+  @@map("coupons")
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  orderId         String    @unique
+  firstName       String
+  lastName        String
+  country         String?
+  countryCode     String?
+  state           String?
+  streetAddress   String
+  postCode        String
+  city            String
+  email           String
+  phone           String
+  paymentMethod   String
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Country {
+  id              String    @id @default(uuid())
+  name            String
+  code            String
+  countryField    String?
+
+  @@map("countries")
+}
+
+// ============================================
+// PAYMENT MODELS
+// ============================================
+
+model VendorPayment {
+  id              String    @id @default(uuid())
+  vendorId        String
+  requestAmount   Float     @default(0)
+  fee             Float     @default(0)
+  description     String?
+  status          PaymentStatus @default(PENDING)
+  method          PaymentMethodType @default(BANK)
+  comment         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  vendor          User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_payments")
+}
+
+// ============================================
+// BLOG MODELS
+// ============================================
+
+model Post {
+  id              String    @id @default(uuid())
+  title           String
+  content         String?   // Rich text
+  authorId        String
+  superCategoryId String?
+  image           String?
+  views           Int       @default(0)
+  tags            String?
+  slug            String    @unique
+  publishedAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  author          Profile   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  superCategory   SuperCategory? @relation(fields: [superCategoryId], references: [id], onDelete: SetNull)
+  comments        Comment[]
+
+  @@map("posts")
+  @@index([slug])
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  postId      String
+  profileId   String?
+  name        String
+  email       String
+  body        String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile     Profile?  @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@map("comments")
+}
+
+// ============================================
+// NEWSLETTER & CONTACT MODELS
+// ============================================
+
+model Newsletter {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  subscribed  Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@map("newsletters")
+}
+
+model Contact {
+  id          String    @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  subject     String
+  message     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("contacts")
+}
+
+// ============================================
+// SETTINGS MODELS
+// ============================================
+
+model SiteSocialLinks {
+  id          String    @id @default(uuid())
+  facebook    String?
+  twitter     String?
+  youtube     String?
+  pinterest   String?
+  instagram   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("site_social_links")
+}
+
+model ContactInfo {
+  id              String    @id @default(uuid())
+  description     String
+  fullAddress     String
+  phone           String
+  email           String
+  workTime        String
+  mapLink         String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("contact_info")
+}
+
+model SupportNumber {
+  id          String    @id @default(uuid())
+  number      String
+  workTime    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("support_numbers")
+}
+
+model SiteSetting {
+  id              String    @id @default(uuid())
+  siteName        String
+  siteTitle       String
+  description     String
+  siteUrl         String?
+  logo            String?
+  favicon         String?
+  loginImage      String?
+  footerImage     String?
+  shippingCost    Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("site_settings")
+}
+
+model HomePageTheme {
+  id          String    @id @default(uuid())
+  pageName    String
+  isActive    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("homepage_themes")
+}
+
+// ============================================
+// HOME PAGE AD MODELS
+// ============================================
+
+model Carousel {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  url         String?
+
+  @@map("carousels")
+}
+
+model HomeAdSidebar {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  url         String?
+  position    AdPosition @default(LEFT)
+
+  @@map("home_ad_sidebars")
+}
+
+model HomeAdMiddlebar {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  url         String?
+  position    AdPosition @default(RIGHT)
+
+  @@map("home_ad_middlebars")
+}
+
+model HomeAdSupplier {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  url         String?
+  position    AdPosition @default(LEFT)
+
+  @@map("home_ad_suppliers")
+}
+
+model HomeAdDaily {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  url         String?
+  position    AdPosition @default(RIGHT)
+
+  @@map("home_ad_daily")
+}
+
+model HomeAdDealTime {
+  id              String    @id @default(uuid())
+  image           String
+  title           String?
+  supplierId      String
+  supplierUrl     String?
+  url             String?
+  price           Float?
+  discountPrice   Float?
+  dealTime        DateTime?
+
+  supplier        Profile   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@map("home_ad_deal_time")
+}
+
+model VendorDetailsAdImage {
+  id          String    @id @default(uuid())
+  image       String
+  url         String?
+
+  @@map("vendor_details_ad_images")
+}
+
+model ShopAdSidebar {
+  id          String    @id @default(uuid())
+  image       String
+  title       String?
+  supplierId  String
+  url         String?
+  position    AdPosition @default(RIGHT)
+
+  supplier    Profile   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@map("shop_ad_sidebars")
+}
+
+model HotDealAd {
+  id          String    @id @default(uuid())
+  image       String
+  rate        Int       @default(0)  // Discount percentage
+  url         String?
+  position    AdPosition @default(RIGHT)
+
+  @@map("hot_deal_ads")
+}
+
+model HeadTextAd {
+  id          String    @id @default(uuid())
+  title       String
+  url         String?
+
+  @@map("head_text_ads")
+}
