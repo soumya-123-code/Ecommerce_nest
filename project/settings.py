@@ -44,6 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
+
+    # Third-party apps
+    'corsheaders',  # CORS support for React frontend
+    'graphene_django',  # GraphQL API
+    'rest_framework',  # Django REST Framework
+
+    # Original apps
     'captcha',
     'currencies',
     'home',
@@ -63,11 +70,15 @@ INSTALLED_APPS = [
     'contact',
     'pages',
     'payments',
+
+    # GraphQL API App
+    'api',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware (must be before CommonMiddleware)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -277,3 +288,61 @@ FATOORAHBASURL = "https://apitest.myfatoorah.com/v2"
 FATOORAHBACKURL = f'https://{YOUR_DOMAIN}/en/api/callbacks-myfatoorah/'
 FATOORAHERRORURL = f'https://{YOUR_DOMAIN}/order/cancel/'
 FATOORAH_CURREENCY ='usd'
+# ============================================
+# GraphQL Configuration
+# ============================================
+GRAPHENE = {
+    'SCHEMA': 'api.schema.schema',
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ],
+}
+
+# ============================================
+# CORS Configuration for React Frontend
+# ============================================
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",   # React Customer Frontend
+    "http://localhost:3001",   # React Admin Panel
+    "http://localhost:3002",   # React Vendor Panel
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:3002",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# ============================================
+# Django REST Framework Configuration
+# ============================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
