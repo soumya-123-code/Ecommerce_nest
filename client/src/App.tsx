@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Home } from './pages/Home';
 import { AdminDashboard } from './pages/AdminDashboard';
-import { VendorDashboard } from './pages/VendorDashboard';
+import { VendorDashboardNew } from './pages/VendorDashboardNew';
 import { Login } from './pages/Login';
 
 type View = 'home' | 'admin' | 'vendor' | 'login';
@@ -17,7 +17,7 @@ function App() {
       case 'admin':
         return <AdminDashboard onNavigate={setCurrentView} />;
       case 'vendor':
-        return <VendorDashboard onNavigate={setCurrentView} />;
+        return <VendorDashboardNew onNavigate={setCurrentView} />;
       case 'login':
         return <Login onNavigate={setCurrentView} onLogin={() => setIsAuthenticated(true)} />;
       default:
