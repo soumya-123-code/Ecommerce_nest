@@ -22,6 +22,9 @@ from home.models import (
     HotDealAd, HeadTextAd
 )
 
+# Import authentication schema
+from authentication.schema import AuthMutation, AuthQuery
+
 
 # ==================== USER & AUTH TYPES ====================
 
@@ -541,13 +544,25 @@ class CreateContactMessage(graphene.Mutation):
         return CreateContactMessage(contact=contact)
 
 
-class Mutation(graphene.ObjectType):
+class Mutation(AuthMutation, graphene.ObjectType):
+    # Product mutations
     create_product = CreateProduct.Field()
     update_product = UpdateProduct.Field()
     delete_product = DeleteProduct.Field()
+
+    # Order mutations
     create_order = CreateOrder.Field()
+
+    # Newsletter & Contact
     subscribe_newsletter = SubscribeNewsletter.Field()
     create_contact_message = CreateContactMessage.Field()
+
+    # Auth mutations are inherited from AuthMutation:
+    # - request_email_otp
+    # - verify_email_otp
+    # - request_mobile_otp
+    # - verify_mobile_otp
+    # - link_mobile
 
 
 # ==================== SCHEMA ====================

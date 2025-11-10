@@ -32,6 +32,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('captcha/', include('captcha.urls')),
 
+    # Authentication API Endpoints (OTP-based)
+    path('auth/', include('authentication.urls', namespace='authentication')),
+
     # Original Django URLs
     path('', include('home.urls', namespace='home')),
     path('', include('products.urls', namespace='products')),

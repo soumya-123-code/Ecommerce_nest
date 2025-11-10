@@ -49,6 +49,11 @@ INSTALLED_APPS = [
     'corsheaders',  # CORS support for React frontend
     'graphene_django',  # GraphQL API
     'rest_framework',  # Django REST Framework
+    'rest_framework_simplejwt',  # JWT Authentication
+    'rest_framework_simplejwt.token_blacklist',  # JWT Token Blacklisting
+
+    # Custom authentication app (OTP-based)
+    'authentication',
 
     # Original apps
     'captcha',
@@ -338,6 +343,7 @@ CORS_ALLOW_HEADERS = [
 # ============================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -345,4 +351,51 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+# ============================================
+# JWT Configuration (Simple JWT)
+# ============================================
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+# ============================================
+# Email Configuration for OTP
+# ============================================
+DEFAULT_FROM_EMAIL = EMAIL_SENDGRID
+SITE_NAME = 'eCommerce Platform'
+
+# ============================================
+# Twilio Configuration for Mobile OTP (Optional)
+# ============================================
+# TWILIO_ACCOUNT_SID = 'your_twilio_account_sid'
+# TWILIO_AUTH_TOKEN = 'your_twilio_auth_token'
+# TWILIO_PHONE_NUMBER = '+1234567890'
