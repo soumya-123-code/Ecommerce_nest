@@ -19,6 +19,15 @@ export default {
     },
     extend: {
       colors: {
+        // Brand colors matching Django template
+        brand: {
+          DEFAULT: '#3BB77E',
+          dark: '#2da35f',
+          light: '#E6F7F0',
+          lighter: '#F4FBF8',
+        },
+        success: '#3BB77E',
+        // Shadcn UI colors
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
