@@ -7,6 +7,7 @@ pub mod home_controller;
 pub mod contact_controller;
 pub mod webhook_controller;
 pub mod admin_controller;
+pub mod cart_controller;
 
 pub use auth_controller::*;
 pub use product_controller::*;
@@ -17,3 +18,4 @@ pub use home_controller::*;
 pub use contact_controller::*;
 pub use webhook_controller::*;
 pub use admin_controller::*;
+pub use cart_controller::*;

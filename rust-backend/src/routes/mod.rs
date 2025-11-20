@@ -135,6 +135,34 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         // Misc routes
         .route("/api/countries", get(controllers::get_countries))
 
+        // Cart routes
+        .route("/api/cart/add", post(controllers::add_to_cart))
+        .route("/api/cart/update/:product_id", post(controllers::update_cart_item))
+        .route("/api/cart/remove/:product_id", delete(controllers::remove_from_cart))
+        .route("/api/cart/clear", delete(controllers::clear_cart))
+        .route("/api/cart/validate", post(controllers::validate_cart))
+
+        // Order tracking
+        .route("/api/orders/:id/track", get(controllers::track_order))
+
+        // Vendor stats
+        .route("/api/vendor/stats", get(controllers::get_vendor_stats))
+        .route("/api/vendor/products/:id", delete(controllers::delete_vendor_product))
+
+        // Admin routes
+        .route("/api/users", get(controllers::list_users))
+        .route("/api/users/:id", get(controllers::get_user))
+        .route("/api/admin/vendors/:id/approve", post(controllers::approve_vendor))
+        .route("/api/admin/vendors/:id/reject", post(controllers::reject_vendor))
+
+        // Post reports
+        .route("/api/blog/posts/:id/reports", get(controllers::get_post_reports))
+
+        // Wishlist
+        .route("/api/wishlist", get(controllers::get_wishlist))
+        .route("/api/wishlist/add", post(controllers::add_to_wishlist))
+        .route("/api/wishlist/:product_id", delete(controllers::remove_from_wishlist))
+
         // Add middleware layers
         .layer(TraceLayer::new_for_http())
         .layer(cors)
