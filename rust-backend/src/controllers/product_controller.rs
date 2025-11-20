@@ -210,3 +210,44 @@ pub async fn get_featured_products(
 
     Ok(Json(ApiResponse::success(items)))
 }
+
+/// GET /api/search
+pub async fn search_products(
+    State(state): State<std::sync::Arc<AppState>>,
+    Query(params): Query<ProductFilterParams>,
+) -> AppResult<Json<PaginatedResponse<ProductListResponse>>> {
+    let mut conn = state.pool.get()?;
+
+    let page = params.page.unwrap_or(1);
+    let per_page = params.per_page.unwrap_or(20);
+
+    let (products, total) = ProductService::get_products(
+        &mut conn,
+        params.category.as_deref(),
+        params.min_price,
+        params.max_price,
+        params.search.as_deref(),
+        page,
+        per_page,
+    )?;
+
+    let items: Vec<ProductListResponse> = products
+        .into_iter()
+        .map(|p| ProductListResponse {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            price: p.price.to_string(),
+            discount_price: p.discount_price.map(|d| d.to_string()),
+            image: p.image,
+            rating: 0.0,
+            reviews_count: 0,
+            is_featured: p.is_featured,
+        })
+        .collect();
+
+    Ok(Json(PaginatedResponse {
+        data: items,
+        pagination: PaginationInfo::new(page, per_page, total),
+    }))
+}

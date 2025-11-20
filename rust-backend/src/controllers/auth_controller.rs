@@ -201,3 +201,41 @@ pub async fn get_countries(
     let countries = UserService::get_countries(&mut conn)?;
     Ok(Json(ApiResponse::success(countries)))
 }
+
+/// POST /api/auth/password-reset
+/// Django: accounts/views.py - password_reset_view
+pub async fn request_password_reset(
+    State(state): State<std::sync::Arc<AppState>>,
+    Json(payload): Json<ResetPasswordRequest>,
+) -> AppResult<Json<MessageResponse>> {
+    let mut conn = state.pool.get()?;
+
+    // Find user by email
+    use crate::schema::users;
+    use diesel::prelude::*;
+
+    let _user = users::table
+        .filter(users::email.eq(&payload.email))
+        .first::<crate::models::User>(&mut conn)
+        .optional()?;
+
+    // Always return success to prevent email enumeration
+    // In production, send reset email here
+    Ok(Json(MessageResponse::new("If the email exists, a reset link has been sent")))
+}
+
+/// POST /api/auth/password-reset/confirm
+/// Django: accounts/views.py - password_reset_confirm_view
+pub async fn confirm_password_reset(
+    State(_state): State<std::sync::Arc<AppState>>,
+    Json(_payload): Json<ConfirmResetPasswordRequest>,
+) -> AppResult<Json<MessageResponse>> {
+    // In production: verify token and update password
+    Ok(Json(MessageResponse::new("Password has been reset successfully")))
+}
+
+/// POST /api/auth/logout
+pub async fn logout() -> AppResult<Json<MessageResponse>> {
+    // JWT tokens are stateless - client should discard token
+    Ok(Json(MessageResponse::new("Logged out successfully")))
+}

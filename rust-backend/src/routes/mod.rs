@@ -23,9 +23,12 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         // Auth routes - Django: accounts/urls.py
         .route("/api/auth/register", post(controllers::register))
         .route("/api/auth/login", post(controllers::login))
+        .route("/api/auth/logout", post(controllers::logout))
         .route("/api/auth/profile", get(controllers::get_profile))
         .route("/api/auth/profile", put(controllers::update_profile))
         .route("/api/auth/change-password", post(controllers::change_password))
+        .route("/api/auth/password-reset", post(controllers::request_password_reset))
+        .route("/api/auth/password-reset/confirm", post(controllers::confirm_password_reset))
         .route("/api/auth/apply-vendor", post(controllers::apply_vendor))
 
         // Product routes - Django: products/urls.py
@@ -35,6 +38,7 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/products/:id/rate", post(controllers::rate_product))
         .route("/api/products/:id/ratings", get(controllers::get_product_ratings))
         .route("/api/categories", get(controllers::get_categories))
+        .route("/api/search", get(controllers::search_products))
 
         // Order routes - Django: orders/urls.py
         .route("/api/orders", get(controllers::list_orders))
@@ -51,6 +55,29 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/vendor/orders/:id", put(controllers::update_vendor_order))
         .route("/api/vendor/wallet", get(controllers::get_vendor_wallet))
         .route("/api/vendor/payments/request", post(controllers::request_vendor_payout))
+
+        // Blog routes - Django: blog/urls.py
+        .route("/api/blog/posts", get(controllers::list_posts))
+        .route("/api/blog/posts/:slug", get(controllers::get_post))
+        .route("/api/blog/posts/:id/comments", get(controllers::get_post_comments))
+        .route("/api/blog/posts/:id/comments", post(controllers::create_comment))
+        .route("/api/blog/posts/:id/view", post(controllers::record_post_view))
+
+        // Home/Settings routes - Django: home/urls.py, settings/urls.py
+        .route("/api/home", get(controllers::get_home_page))
+        .route("/api/carousels", get(controllers::get_carousels))
+        .route("/api/settings", get(controllers::get_site_settings))
+        .route("/api/pages/:slug", get(controllers::get_page))
+
+        // Contact routes - Django: contact/urls.py
+        .route("/api/newsletter/subscribe", post(controllers::subscribe_newsletter))
+        .route("/api/newsletter/unsubscribe", post(controllers::unsubscribe_newsletter))
+        .route("/api/contact", post(controllers::submit_contact))
+
+        // Webhook routes - Django: orders/views.py (webhooks)
+        .route("/api/webhooks/stripe", post(controllers::stripe_webhook))
+        .route("/api/webhooks/razorpay", post(controllers::razorpay_webhook))
+        .route("/api/webhooks/paypal", post(controllers::paypal_webhook))
 
         // Misc routes
         .route("/api/countries", get(controllers::get_countries))

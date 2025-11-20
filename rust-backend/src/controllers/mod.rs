@@ -2,8 +2,16 @@ pub mod auth_controller;
 pub mod product_controller;
 pub mod order_controller;
 pub mod vendor_controller;
+pub mod blog_controller;
+pub mod home_controller;
+pub mod contact_controller;
+pub mod webhook_controller;
 
 pub use auth_controller::*;
 pub use product_controller::*;
 pub use order_controller::*;
 pub use vendor_controller::*;
+pub use blog_controller::*;
+pub use home_controller::*;
+pub use contact_controller::*;
+pub use webhook_controller::*;
