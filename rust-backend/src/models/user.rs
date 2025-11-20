@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-use crate::schema::{users, profiles, bank_accounts, countries};
+use crate::schema::{users, profiles, bank_accounts, countries, social_links};
 
 // ==================== User Model ====================
 // Django: auth.User → Rust: User struct
@@ -141,4 +141,25 @@ pub struct NewCountry {
     pub code: String,
     pub currency_code: String,
     pub currency_symbol: String,
+}
+
+// ==================== Social Link Model ====================
+// Django: accounts.SocialLink → Rust: SocialLink struct
+
+#[derive(Debug, Clone, Queryable, Identifiable, Associations, Selectable, Serialize)]
+#[diesel(belongs_to(Profile))]
+#[diesel(table_name = social_links)]
+pub struct SocialLink {
+    pub id: i32,
+    pub profile_id: i32,
+    pub platform: String,
+    pub url: String,
+}
+
+#[derive(Debug, Insertable, Deserialize)]
+#[diesel(table_name = social_links)]
+pub struct NewSocialLink {
+    pub profile_id: i32,
+    pub platform: String,
+    pub url: String,
 }

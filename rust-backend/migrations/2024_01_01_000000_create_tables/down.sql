@@ -1,4 +1,11 @@
 -- Drop all tables in reverse order of creation
+DROP TABLE IF EXISTS pages;
+DROP TABLE IF EXISTS post_reports;
+DROP TABLE IF EXISTS home_page_themes;
+DROP TABLE IF EXISTS support_numbers;
+DROP TABLE IF EXISTS contact_info;
+DROP TABLE IF EXISTS site_social_links;
+DROP TABLE IF EXISTS social_links;
 DROP TABLE IF EXISTS home_ads;
 DROP TABLE IF EXISTS carousels;
 DROP TABLE IF EXISTS site_settings;
