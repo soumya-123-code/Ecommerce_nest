@@ -497,3 +497,66 @@ pub async fn list_supplier_ads(
 
     Ok(Json(ApiResponse::success(ads)))
 }
+
+// ==================== PAGES ====================
+
+/// GET /api/pages
+pub async fn list_pages(
+    State(state): State<std::sync::Arc<AppState>>,
+) -> AppResult<Json<ApiResponse<Vec<Page>>>> {
+    let mut conn = state.pool.get()?;
+
+    let page_list = pages::table
+        .filter(pages::is_published.eq(true))
+        .order(pages::created_at.desc())
+        .load::<Page>(&mut conn)?;
+
+    Ok(Json(ApiResponse::success(page_list)))
+}
+
+// ==================== NEWSLETTERS ====================
+
+/// GET /api/newsletters
+pub async fn list_newsletters(
+    State(state): State<std::sync::Arc<AppState>>,
+) -> AppResult<Json<ApiResponse<Vec<Newsletter>>>> {
+    let mut conn = state.pool.get()?;
+
+    let subs = newsletters::table
+        .filter(newsletters::is_active.eq(true))
+        .order(newsletters::subscribed_at.desc())
+        .load::<Newsletter>(&mut conn)?;
+
+    Ok(Json(ApiResponse::success(subs)))
+}
+
+// ==================== CONTACT MESSAGES ====================
+
+/// GET /api/contact-messages
+pub async fn list_contact_messages(
+    State(state): State<std::sync::Arc<AppState>>,
+) -> AppResult<Json<ApiResponse<Vec<ContactMessage>>>> {
+    let mut conn = state.pool.get()?;
+
+    let messages = contact_messages::table
+        .order(contact_messages::created_at.desc())
+        .load::<ContactMessage>(&mut conn)?;
+
+    Ok(Json(ApiResponse::success(messages)))
+}
+
+// ==================== ALL ADS ====================
+
+/// GET /api/ads
+pub async fn list_all_ads(
+    State(state): State<std::sync::Arc<AppState>>,
+) -> AppResult<Json<ApiResponse<Vec<HomeAd>>>> {
+    let mut conn = state.pool.get()?;
+
+    let ads = home_ads::table
+        .filter(home_ads::is_active.eq(true))
+        .order(home_ads::sort_order.asc())
+        .load::<HomeAd>(&mut conn)?;
+
+    Ok(Json(ApiResponse::success(ads)))
+}

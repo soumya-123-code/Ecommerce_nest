@@ -67,7 +67,11 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/home", get(controllers::get_home_page))
         .route("/api/carousels", get(controllers::get_carousels))
         .route("/api/settings", get(controllers::get_site_settings))
+        .route("/api/pages", get(controllers::list_pages))
         .route("/api/pages/:slug", get(controllers::get_page))
+        .route("/api/newsletters", get(controllers::list_newsletters))
+        .route("/api/contact-messages", get(controllers::list_contact_messages))
+        .route("/api/ads", get(controllers::list_all_ads))
 
         // Contact routes - Django: contact/urls.py
         .route("/api/newsletter/subscribe", post(controllers::subscribe_newsletter))
