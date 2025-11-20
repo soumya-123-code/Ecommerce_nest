@@ -112,6 +112,10 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/coupons", get(controllers::list_coupons))
         .route("/api/coupons/:code", get(controllers::get_coupon))
 
+        // Payment routes
+        .route("/api/payments", get(controllers::list_payments))
+        .route("/api/payments/:id", get(controllers::get_payment))
+
         // Vendor payments route
         .route("/api/vendor/payments", get(controllers::list_vendor_payments))
 

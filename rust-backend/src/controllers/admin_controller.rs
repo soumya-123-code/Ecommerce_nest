@@ -339,6 +339,51 @@ pub async fn get_order_payment(
     Ok(Json(ApiResponse::success(payment)))
 }
 
+/// GET /api/payments
+pub async fn list_payments(
+    State(state): State<std::sync::Arc<AppState>>,
+    auth_user: AuthUser,
+) -> AppResult<Json<ApiResponse<Vec<Payment>>>> {
+    let mut conn = state.pool.get()?;
+
+    // Get user's orders
+    let user_orders: Vec<i32> = orders::table
+        .filter(orders::user_id.eq(auth_user.user_id))
+        .select(orders::id)
+        .load::<i32>(&mut conn)?;
+
+    let payment_list = payments::table
+        .filter(payments::order_id.eq_any(user_orders))
+        .order(payments::created_at.desc())
+        .load::<Payment>(&mut conn)?;
+
+    Ok(Json(ApiResponse::success(payment_list)))
+}
+
+/// GET /api/payments/:id
+pub async fn get_payment(
+    State(state): State<std::sync::Arc<AppState>>,
+    auth_user: AuthUser,
+    Path(payment_id): Path<i32>,
+) -> AppResult<Json<ApiResponse<Payment>>> {
+    let mut conn = state.pool.get()?;
+
+    let payment = payments::table
+        .find(payment_id)
+        .first::<Payment>(&mut conn)
+        .optional()?
+        .ok_or_else(|| AppError::NotFound("Payment not found".to_string()))?;
+
+    // Verify payment belongs to user's order
+    let _order = orders::table
+        .filter(orders::id.eq(payment.order_id))
+        .filter(orders::user_id.eq(auth_user.user_id))
+        .first::<Order>(&mut conn)
+        .map_err(|_| AppError::Forbidden("Not your payment".to_string()))?;
+
+    Ok(Json(ApiResponse::success(payment)))
+}
+
 // ==================== VENDOR PAYMENTS ====================
 
 /// GET /api/vendor/payments
