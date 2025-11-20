@@ -79,6 +79,51 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/webhooks/razorpay", post(controllers::razorpay_webhook))
         .route("/api/webhooks/paypal", post(controllers::paypal_webhook))
 
+        // Bank accounts routes
+        .route("/api/bank-accounts", get(controllers::list_bank_accounts))
+        .route("/api/bank-accounts", post(controllers::create_bank_account))
+        .route("/api/bank-accounts/:id", delete(controllers::delete_bank_account))
+
+        // Social links routes
+        .route("/api/social-links", get(controllers::list_social_links))
+        .route("/api/social-links", post(controllers::create_social_link))
+        .route("/api/social-links/:id", delete(controllers::delete_social_link))
+
+        // Category hierarchy routes
+        .route("/api/categories/super", get(controllers::list_super_categories))
+        .route("/api/categories/main/:super_id", get(controllers::list_main_categories))
+        .route("/api/categories/sub/:main_id", get(controllers::list_sub_categories))
+        .route("/api/categories/mini/:sub_id", get(controllers::list_mini_categories))
+
+        // Product details routes
+        .route("/api/products/:id/images", get(controllers::list_product_images))
+        .route("/api/products/:id/sizes", get(controllers::list_product_sizes))
+
+        // Order details routes
+        .route("/api/orders/:id/details", get(controllers::list_order_details))
+        .route("/api/orders/:id/suppliers", get(controllers::list_order_suppliers))
+        .route("/api/orders/:id/payment", get(controllers::get_order_payment))
+
+        // Coupon routes
+        .route("/api/coupons", get(controllers::list_coupons))
+        .route("/api/coupons/:code", get(controllers::get_coupon))
+
+        // Vendor payments route
+        .route("/api/vendor/payments", get(controllers::list_vendor_payments))
+
+        // Site info routes
+        .route("/api/contact-info", get(controllers::get_contact_info))
+        .route("/api/support-numbers", get(controllers::list_support_numbers))
+        .route("/api/site-social-links", get(controllers::list_site_social_links))
+        .route("/api/home-theme", get(controllers::get_home_theme))
+
+        // Ad routes
+        .route("/api/ads/sidebar", get(controllers::list_sidebar_ads))
+        .route("/api/ads/middle", get(controllers::list_middle_ads))
+        .route("/api/ads/daily", get(controllers::list_daily_ads))
+        .route("/api/ads/hot-deals", get(controllers::list_hot_deal_ads))
+        .route("/api/ads/supplier", get(controllers::list_supplier_ads))
+
         // Misc routes
         .route("/api/countries", get(controllers::get_countries))
 
