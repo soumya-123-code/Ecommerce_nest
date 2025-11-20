@@ -82,6 +82,8 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/webhooks/stripe", post(controllers::stripe_webhook))
         .route("/api/webhooks/razorpay", post(controllers::razorpay_webhook))
         .route("/api/webhooks/paypal", post(controllers::paypal_webhook))
+        .route("/api/webhooks/paymob", post(controllers::paymob_webhook))
+        .route("/api/webhooks/myfatoorah", post(controllers::myfatoorah_webhook))
 
         // Bank accounts routes
         .route("/api/bank-accounts", get(controllers::list_bank_accounts))
@@ -162,6 +164,12 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/wishlist", get(controllers::get_wishlist))
         .route("/api/wishlist/add", post(controllers::add_to_wishlist))
         .route("/api/wishlist/:product_id", delete(controllers::remove_from_wishlist))
+
+        // File upload routes
+        .route("/api/upload/image", post(controllers::upload_image))
+        .route("/api/products/:id/images/upload", post(controllers::upload_product_image))
+        .route("/api/products/:product_id/images/:image_id", delete(controllers::delete_product_image))
+        .route("/api/auth/avatar", post(controllers::upload_avatar))
 
         // Add middleware layers
         .layer(TraceLayer::new_for_http())
