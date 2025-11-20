@@ -2,7 +2,8 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::schema::{posts, comments, post_views, newsletters, contact_messages};
+use chrono::NaiveDate;
+use crate::schema::{posts, comments, post_views, post_reports, newsletters, contact_messages};
 
 // ==================== Post Model ====================
 // Django: blog.Post → Rust: Post struct
@@ -138,4 +139,27 @@ pub struct NewContactMessage {
     pub email: String,
     pub subject: String,
     pub message: String,
+}
+
+// ==================== Post Report Model ====================
+// Django: reports.PostReport → Rust: PostReport struct
+
+#[derive(Debug, Clone, Queryable, Identifiable, Associations, Selectable, Serialize)]
+#[diesel(belongs_to(Post))]
+#[diesel(table_name = post_reports)]
+pub struct PostReport {
+    pub id: i32,
+    pub post_id: i32,
+    pub date: NaiveDate,
+    pub impressions: i32,
+    pub unique_visitors: i32,
+}
+
+#[derive(Debug, Insertable)]
+#[diesel(table_name = post_reports)]
+pub struct NewPostReport {
+    pub post_id: i32,
+    pub date: NaiveDate,
+    pub impressions: i32,
+    pub unique_visitors: i32,
 }

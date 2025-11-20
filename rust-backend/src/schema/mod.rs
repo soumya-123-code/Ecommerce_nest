@@ -360,6 +360,79 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    social_links (id) {
+        id -> Integer,
+        profile_id -> Integer,
+        platform -> Varchar,
+        url -> Varchar,
+    }
+}
+
+diesel::table! {
+    site_social_links (id) {
+        id -> Integer,
+        platform -> Varchar,
+        url -> Varchar,
+        icon -> Nullable<Varchar>,
+        is_active -> Bool,
+    }
+}
+
+diesel::table! {
+    contact_info (id) {
+        id -> Integer,
+        address -> Nullable<Text>,
+        email -> Nullable<Varchar>,
+        phone -> Nullable<Varchar>,
+        working_hours -> Nullable<Varchar>,
+        map_embed -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    support_numbers (id) {
+        id -> Integer,
+        label -> Varchar,
+        number -> Varchar,
+        is_whatsapp -> Bool,
+        is_active -> Bool,
+    }
+}
+
+diesel::table! {
+    home_page_themes (id) {
+        id -> Integer,
+        primary_color -> Nullable<Varchar>,
+        secondary_color -> Nullable<Varchar>,
+        accent_color -> Nullable<Varchar>,
+        font_family -> Nullable<Varchar>,
+        is_active -> Bool,
+    }
+}
+
+diesel::table! {
+    post_reports (id) {
+        id -> Integer,
+        post_id -> Integer,
+        date -> Date,
+        impressions -> Integer,
+        unique_visitors -> Integer,
+    }
+}
+
+diesel::table! {
+    pages (id) {
+        id -> Integer,
+        title -> Varchar,
+        slug -> Varchar,
+        content -> Text,
+        is_published -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
 // Define relationships
 diesel::joinable!(profiles -> users (user_id));
 diesel::joinable!(profiles -> countries (country_id));
@@ -388,6 +461,8 @@ diesel::joinable!(posts -> users (author_id));
 diesel::joinable!(comments -> posts (post_id));
 diesel::joinable!(comments -> users (user_id));
 diesel::joinable!(post_views -> posts (post_id));
+diesel::joinable!(social_links -> profiles (profile_id));
+diesel::joinable!(post_reports -> posts (post_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     users,
@@ -417,4 +492,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     site_settings,
     carousels,
     home_ads,
+    social_links,
+    site_social_links,
+    contact_info,
+    support_numbers,
+    home_page_themes,
+    post_reports,
+    pages,
 );

@@ -363,3 +363,72 @@ CREATE TABLE home_ads (
     starts_at TIMESTAMP NULL,
     ends_at TIMESTAMP NULL
 );
+
+-- Social links (user profiles)
+CREATE TABLE social_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_id INT NOT NULL,
+    platform VARCHAR(50) NOT NULL,
+    url VARCHAR(500) NOT NULL,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+);
+
+-- Site social links
+CREATE TABLE site_social_links (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    platform VARCHAR(50) NOT NULL,
+    url VARCHAR(500) NOT NULL,
+    icon VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Contact info
+CREATE TABLE contact_info (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    address TEXT,
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    working_hours VARCHAR(255),
+    map_embed TEXT
+);
+
+-- Support numbers
+CREATE TABLE support_numbers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    label VARCHAR(100) NOT NULL,
+    number VARCHAR(50) NOT NULL,
+    is_whatsapp BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Home page themes
+CREATE TABLE home_page_themes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    primary_color VARCHAR(20),
+    secondary_color VARCHAR(20),
+    accent_color VARCHAR(20),
+    font_family VARCHAR(100),
+    is_active BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Post reports (daily analytics)
+CREATE TABLE post_reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    date DATE NOT NULL,
+    impressions INT NOT NULL DEFAULT 0,
+    unique_visitors INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_post_date (post_id, date)
+);
+
+-- Static pages
+CREATE TABLE pages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(280) NOT NULL UNIQUE,
+    content TEXT NOT NULL,
+    is_published BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
