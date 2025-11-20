@@ -145,3 +145,90 @@ pub async fn paypal_webhook(
 
     Ok(Json(MessageResponse::new("Webhook processed")))
 }
+
+/// POST /api/webhooks/paymob
+/// Django: orders/views.py - paymob_callback
+pub async fn paymob_webhook(
+    State(state): State<std::sync::Arc<AppState>>,
+    Json(payload): Json<serde_json::Value>,
+) -> AppResult<Json<MessageResponse>> {
+    let mut conn = state.pool.get()?;
+
+    let success = payload.get("obj")
+        .and_then(|o| o.get("success"))
+        .and_then(|s| s.as_bool())
+        .unwrap_or(false);
+
+    if success {
+        if let Some(order_id) = payload.get("obj")
+            .and_then(|o| o.get("order"))
+            .and_then(|o| o.get("merchant_order_id"))
+            .and_then(|id| id.as_str())
+            .and_then(|s| s.parse::<i32>().ok())
+        {
+            diesel::update(orders::table.find(order_id))
+                .set(orders::status.eq("confirmed"))
+                .execute(&mut conn)?;
+
+            diesel::update(payments::table.filter(payments::order_id.eq(order_id)))
+                .set(payments::status.eq("completed"))
+                .execute(&mut conn)?;
+        }
+    } else {
+        if let Some(order_id) = payload.get("obj")
+            .and_then(|o| o.get("order"))
+            .and_then(|o| o.get("merchant_order_id"))
+            .and_then(|id| id.as_str())
+            .and_then(|s| s.parse::<i32>().ok())
+        {
+            diesel::update(payments::table.filter(payments::order_id.eq(order_id)))
+                .set(payments::status.eq("failed"))
+                .execute(&mut conn)?;
+        }
+    }
+
+    Ok(Json(MessageResponse::new("Webhook processed")))
+}
+
+/// POST /api/webhooks/myfatoorah
+/// Django: orders/views.py - myfatoorah_callback
+pub async fn myfatoorah_webhook(
+    State(state): State<std::sync::Arc<AppState>>,
+    Json(payload): Json<serde_json::Value>,
+) -> AppResult<Json<MessageResponse>> {
+    let mut conn = state.pool.get()?;
+
+    let status = payload.get("TransactionStatus")
+        .and_then(|s| s.as_str())
+        .unwrap_or("");
+
+    match status {
+        "SUCCESS" | "CAPTURED" => {
+            if let Some(order_id) = payload.get("UserDefinedField")
+                .and_then(|u| u.as_str())
+                .and_then(|s| s.parse::<i32>().ok())
+            {
+                diesel::update(orders::table.find(order_id))
+                    .set(orders::status.eq("confirmed"))
+                    .execute(&mut conn)?;
+
+                diesel::update(payments::table.filter(payments::order_id.eq(order_id)))
+                    .set(payments::status.eq("completed"))
+                    .execute(&mut conn)?;
+            }
+        }
+        "FAILED" | "EXPIRED" => {
+            if let Some(order_id) = payload.get("UserDefinedField")
+                .and_then(|u| u.as_str())
+                .and_then(|s| s.parse::<i32>().ok())
+            {
+                diesel::update(payments::table.filter(payments::order_id.eq(order_id)))
+                    .set(payments::status.eq("failed"))
+                    .execute(&mut conn)?;
+            }
+        }
+        _ => {}
+    }
+
+    Ok(Json(MessageResponse::new("Webhook processed")))
+}

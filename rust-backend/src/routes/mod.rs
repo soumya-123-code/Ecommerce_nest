@@ -82,6 +82,8 @@ pub fn create_router(state: Arc<AppState>) -> Router {
         .route("/api/webhooks/stripe", post(controllers::stripe_webhook))
         .route("/api/webhooks/razorpay", post(controllers::razorpay_webhook))
         .route("/api/webhooks/paypal", post(controllers::paypal_webhook))
+        .route("/api/webhooks/paymob", post(controllers::paymob_webhook))
+        .route("/api/webhooks/myfatoorah", post(controllers::myfatoorah_webhook))
 
         // Bank accounts routes
         .route("/api/bank-accounts", get(controllers::list_bank_accounts))
@@ -134,6 +136,40 @@ pub fn create_router(state: Arc<AppState>) -> Router {
 
         // Misc routes
         .route("/api/countries", get(controllers::get_countries))
+
+        // Cart routes
+        .route("/api/cart/add", post(controllers::add_to_cart))
+        .route("/api/cart/update/:product_id", post(controllers::update_cart_item))
+        .route("/api/cart/remove/:product_id", delete(controllers::remove_from_cart))
+        .route("/api/cart/clear", delete(controllers::clear_cart))
+        .route("/api/cart/validate", post(controllers::validate_cart))
+
+        // Order tracking
+        .route("/api/orders/:id/track", get(controllers::track_order))
+
+        // Vendor stats
+        .route("/api/vendor/stats", get(controllers::get_vendor_stats))
+        .route("/api/vendor/products/:id", delete(controllers::delete_vendor_product))
+
+        // Admin routes
+        .route("/api/users", get(controllers::list_users))
+        .route("/api/users/:id", get(controllers::get_user))
+        .route("/api/admin/vendors/:id/approve", post(controllers::approve_vendor))
+        .route("/api/admin/vendors/:id/reject", post(controllers::reject_vendor))
+
+        // Post reports
+        .route("/api/blog/posts/:id/reports", get(controllers::get_post_reports))
+
+        // Wishlist
+        .route("/api/wishlist", get(controllers::get_wishlist))
+        .route("/api/wishlist/add", post(controllers::add_to_wishlist))
+        .route("/api/wishlist/:product_id", delete(controllers::remove_from_wishlist))
+
+        // File upload routes
+        .route("/api/upload/image", post(controllers::upload_image))
+        .route("/api/products/:id/images/upload", post(controllers::upload_product_image))
+        .route("/api/products/:product_id/images/:image_id", delete(controllers::delete_product_image))
+        .route("/api/auth/avatar", post(controllers::upload_avatar))
 
         // Add middleware layers
         .layer(TraceLayer::new_for_http())
